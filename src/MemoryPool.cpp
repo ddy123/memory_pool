@@ -25,6 +25,20 @@ namespace ddy_MemoryPool{
         return rem==0?0:align-rem;
     }
 
+    void MemoryPool::allocateNewBlock(){
+        void* newBlock=operator new(BlockSize_);
+
+        //将新申请的块挂在头部
+        reinterpret_cast<Slot*>(newBlock)->next=firstBlock_;
+        firstBlock_=reinterpret_cast<Slot*>(newBlock);
+
+        char* body=reinterpret_cast<char*>(newBlock)+sizeof(Slot*);
+        size_t bodyPadding=padPointer(body,SlotSize_);
+
+        curSlot_=reinterpret_cast<Slot*>(body+bodyPadding);
+        lastSlot_=reinterpret_cast<Slot*>(reinterpret_cast<char*>(newBlock)+BlockSize_-SlotSize_);
+    }
+
     MemoryPool& HashBucket::getMemoryPool(int index){
         static MemoryPool memoryPool[MEMORY_POOL_NUM];
         return memoryPool[index];
