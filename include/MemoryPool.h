@@ -4,7 +4,7 @@
 #include <cassert>
 #include <utility>
 
-namespace ddy_MempryPool{
+namespace ddy_MemoryPool{
 #define MEMORY_POOL_NUM 64
 #define SLOT_BASE_SIZE 8
 #define MAX_SLOT_SIZE 512
@@ -16,7 +16,7 @@ struct Slot{
 class MemoryPool{
     //初始化和公共的函数
     public:
-        MemoryPool(size_t Block_size);
+        MemoryPool(size_t Blocksize=4096);
         ~MemoryPool();
         void init(size_t size);
         void* allocate();
