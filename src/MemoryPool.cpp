@@ -7,7 +7,10 @@ namespace ddy_MemoryPool{
          curSlot_(nullptr),
          lastSlot_(nullptr),
          freeList_(nullptr){
-
          }
+    void MemoryPool::init(size_t size){
+        assert(size>0);
+        SlotSize_=size;
+    }
 
 }
