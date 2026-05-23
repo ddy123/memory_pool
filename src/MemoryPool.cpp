@@ -13,6 +13,40 @@ namespace ddy_MemoryPool{
         SlotSize_=size;
     }
 
+    void* MemoryPool::allocate(){
+        Slot* slot=popFreeList();
+        if(slot!=nullptr){
+            return slot;
+        }
+
+        Slot* tmp;
+
+        {
+        std::lock_guard<std::mutex> lock(mutexForBlock_);
+        if(curSlot_>lastSlot_){
+                allocateNewBlock();
+            }
+        tmp=curSlot_;
+        //转为char*进行指针运算
+        //curSlot_=reinterpret_cast<Slot*>(reinterpret_cast<char*>(curSlot_)+SlotSize);
+        //不能直接 curSlot_ += SlotSize_，因为 curSlot_ 是 Slot*类型
+        //指针加法会按 sizeof(Slot) 为单位移动，直接相加就是SlotSize_*sizeof(Slot)
+        //如果要移动 SlotSize_ 字节，所以需要除以sizeof(Slot)进行指针运算
+        curSlot_+=SlotSize_/sizeof(Slot);
+
+        }
+            
+        return tmp;
+        
+    }
+
+    void MemoryPool::deallocate(void* ptr){
+        if(ptr==nullptr){
+            return;
+        }
+        pushFreeList(reinterpret_cast<Slot*>(ptr));
+    }
+
     void HashBucket::initMemoryPool(){
         for(int i=0;i<MEMORY_POOL_NUM;i++){
             getMemoryPool(i).init((i+1)*SLOT_BASE_SIZE);
@@ -43,9 +77,11 @@ namespace ddy_MemoryPool{
         static MemoryPool memoryPool[MEMORY_POOL_NUM];
         return memoryPool[index];
     }
-    size_t MemoryPool::padPointer(char* p,size_t align){
-        uintptr_t result=(reinterpret_cast<uintptr_t>(p)+align-1)&~(align-1);
-        return result;
+    
+    void HashBucket::initMemoryPool(){
+        for(int i=0;i<MEMORY_POOL_NUM;i++){
+            getMemoryPool(i).init((i+1)*SLOT_BASE_SIZE);
+        }
     }
 
 }
