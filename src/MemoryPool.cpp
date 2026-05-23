@@ -19,9 +19,19 @@ namespace ddy_MemoryPool{
         }
     }
 
+    //指针对齐所需偏移量
+    size_t MemoryPool::padPointer(char* p,size_t align){
+        size_t rem=reinterpret_cast<size_t>(p)%align;
+        return rem==0?0:align-rem;
+    }
+
     MemoryPool& HashBucket::getMemoryPool(int index){
         static MemoryPool memoryPool[MEMORY_POOL_NUM];
-        return memoryPool[indedx];
+        return memoryPool[index];
+    }
+    size_t MemoryPool::padPointer(char* p,size_t align){
+        uintptr_t result=(reinterpret_cast<uintptr_t>(p)+align-1)&~(align-1);
+        return result;
     }
 
 }
