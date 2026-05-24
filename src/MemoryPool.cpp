@@ -12,6 +12,14 @@ namespace ddy_MemoryPool{
         assert(size>0);
         SlotSize_=size;
     }
+     MemoryPool::~MemoryPool(){
+        Slot* curr=firstBlock_;
+        while(curr!=nullptr){
+            Slot* next=curr->next.load(std::memory_order_relaxed);
+            operator delete(reinterpret_cast<void*>(curr));
+            curr=next;
+        }
+    }
 
     void* MemoryPool::allocate(){
         Slot* slot=popFreeList();
@@ -46,6 +54,45 @@ namespace ddy_MemoryPool{
         }
         pushFreeList(reinterpret_cast<Slot*>(ptr));
     }
+
+    bool MemoryPool::pushFreeList(Slot* slot){
+        while(true){
+            //获取当前头节点
+            Slot* oldHead=freeList_.load(std::memory_order_relaxed);
+            //将新节点的next指向当前头节点
+            slot->next.store(oldHead,std::memory_order_relaxed);
+            //尝试将头节点更新为新节点
+            if(freeList_.compare_exchange_weak(oldHead,slot,std::memory_order_release,std::memory_order_relaxed)){
+                return true;
+            }
+        }
+    }
+
+  /*   //compare_exchange_weak失败时会将oldHead更新为当前freeList_的值，因此在下一次循环中会使用最新的头节点进行操作，保证了线程安全。
+    bool MemoryPool::psuhFreeList(Slot* slot){
+        Slot* oldHead=freeList_.load(std::memory_order_relaxed);
+        do{
+            slot->next.store(oldHead,std::memory_order_relaxed);
+        }while(!freeList_.compare_exchange_weak(oldHead,slot,std::memory_order_release,std::memory_order_relaxed));
+        return true;
+    } */
+
+    Slot* MemoryPool::popFreeList(){
+        while(true){
+            //获取当前头节点
+            Slot* oldHead=freeList_.load(std::memory_order_relaxed);
+            if(oldHead==nullptr){
+                return nullptr;
+            }
+            //获取下一个节点
+            Slot* next=oldHead->next.load(std::memory_order_relaxed);
+            //尝试将头节点更新为下一个节点
+            if(freeList_.compare_exchange_weak(oldHead,next,std::memory_order_acquire,std::memory_order_relaxed)){
+                return oldHead;
+            }
+        }
+    }
+
 
     void HashBucket::initMemoryPool(){
         for(int i=0;i<MEMORY_POOL_NUM;i++){
