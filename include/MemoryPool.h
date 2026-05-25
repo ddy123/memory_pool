@@ -61,6 +61,13 @@ class HashBucket{
             getMemoryPool(((size+SLOT_BASE_SIZE-1)/SLOT_BASE_SIZE)-1).deallocate(ptr);
             
         }
+    }
+template<typename T,typename... Args>
+T* newElement(Args&&... args){
+    T* p=reinterpret_cast<T*>(HashBucket::useMemory(sizeof(T)));
+    if(p!=nullptr){
+        new(p) T(std::forward<Args>(args)...);
+    }
+    return p;
 }
-
 }
