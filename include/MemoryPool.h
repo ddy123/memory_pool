@@ -50,7 +50,7 @@ class HashBucket{
              return getMemoryPool(((size+SLOT_BASE_SIZE-1)/SLOT_BASE_SIZE)-1).allocate();
         }
         static void freeMemory(void* ptr,size_t size){
-            if(ptr==nullptr||size<=0){
+            if(ptr==nullptr){
                 return;
             }
             if(size>MAX_SLOT_SIZE){
@@ -70,4 +70,13 @@ T* newElement(Args&&... args){
     }
     return p;
 }
+
+template<typename T>
+void deleteElement(T* p){
+    if(p==nullptr){
+        return;}
+    p->~T();
+    HashBucket::freeMemory(reinterpret_cast<void*>(p),sizeof(T));
+    }
+
 }
