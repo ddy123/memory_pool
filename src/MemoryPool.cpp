@@ -120,6 +120,7 @@ namespace ddy_MemoryPool{
         lastSlot_=reinterpret_cast<Slot*>(reinterpret_cast<char*>(newBlock)+BlockSize_-SlotSize_);
     }
 
+
     MemoryPool& HashBucket::getMemoryPool(int index){
         static MemoryPool memoryPool[MEMORY_POOL_NUM];
         return memoryPool[index];

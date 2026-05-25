@@ -40,7 +40,15 @@ class HashBucket{
     public:
         static void initMemoryPool();
         static MemoryPool& getMemoryPool(int index);
-        static void* useMemory(size_t size);
+        static void* useMemory(size_t size){
+             if(size<=0){
+            return nullptr;
+                }
+            if(size>MAX_SLOT_SIZE){
+            return operator new(size);
+             }
+             return getMemoryPool(((size+1)/SLOT_BASE_SIZE)-1).allocate();
+        }
         static void freeMemory(void* prt,size_t size);
 }
 
