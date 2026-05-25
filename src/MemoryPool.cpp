@@ -3,7 +3,7 @@ namespace ddy_MemoryPool{
     MemoryPool::MemoryPool(size_t BlockSize)
         :BlockSize_(BlockSize),
          SlotSize_(0),
-         freeBlock_(nullptr),
+         firstBlock_(nullptr),
          curSlot_(nullptr),
          lastSlot_(nullptr),
          freeList_(nullptr){
@@ -31,7 +31,7 @@ namespace ddy_MemoryPool{
 
         {
         std::lock_guard<std::mutex> lock(mutexForBlock_);
-        if(curSlot_>lastSlot_){
+        if(curSlot_>=lastSlot_){
                 allocateNewBlock();
             }
         tmp=curSlot_;
@@ -93,13 +93,6 @@ namespace ddy_MemoryPool{
         }
     }
 
-
-    void HashBucket::initMemoryPool(){
-        for(int i=0;i<MEMORY_POOL_NUM;i++){
-            getMemoryPool(i).init((i+1)*SLOT_BASE_SIZE);
-        }
-    }
-
     //指针对齐所需偏移量
     size_t MemoryPool::padPointer(char* p,size_t align){
         size_t rem=reinterpret_cast<size_t>(p)%align;
@@ -117,7 +110,8 @@ namespace ddy_MemoryPool{
         size_t bodyPadding=padPointer(body,SlotSize_);
 
         curSlot_=reinterpret_cast<Slot*>(body+bodyPadding);
-        lastSlot_=reinterpret_cast<Slot*>(reinterpret_cast<char*>(newBlock)+BlockSize_-SlotSize_);
+        
+        lastSlot_=reinterpret_cast<Slot*>(reinterpret_cast<char*>(newBlock)+BlockSize_-SlotSize_+1);
     }
 
 

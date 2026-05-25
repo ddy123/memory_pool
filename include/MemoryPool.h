@@ -11,7 +11,7 @@ namespace ddy_MemoryPool{
 
 struct Slot{
     std::atomic<Slot*> next;
-}
+};
 
 class MemoryPool{
     //初始化和公共的函数
@@ -33,8 +33,8 @@ class MemoryPool{
         void allocateNewBlock();
         size_t padPointer(char* p,size_t align);
         Slot* popFreeList();
-        void pushFreeList(Slot* slot);
-}
+        bool pushFreeList(Slot* slot);
+};
  
 class HashBucket{
     public:
@@ -61,7 +61,7 @@ class HashBucket{
             getMemoryPool(((size+SLOT_BASE_SIZE-1)/SLOT_BASE_SIZE)-1).deallocate(ptr);
             
         }
-    }
+    };
 template<typename T,typename... Args>
 T* newElement(Args&&... args){
     T* p=reinterpret_cast<T*>(HashBucket::useMemory(sizeof(T)));
